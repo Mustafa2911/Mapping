@@ -5,6 +5,7 @@ import com.codingshuttle.mappinghomework.DTO.SubjectDTO;
 import com.codingshuttle.mappinghomework.entities.Professor;
 import com.codingshuttle.mappinghomework.entities.Subject;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,16 +13,9 @@ import org.springframework.context.annotation.Configuration;
 public class ModelMapperConfiguration {
 
     @Bean
-    public ModelMapper modelMapper() {
+    public ModelMapper modelMappers() {
         ModelMapper modelMapper = new ModelMapper();
-        modelMapper.typeMap(Professor.class, ProfessorDTO.class).addMappings(mapper -> {
-            mapper.skip(ProfessorDTO::setSubjects); // Skip subjects to prevent recursion
-        });
-
-        modelMapper.typeMap(Subject.class, SubjectDTO.class).addMappings(mapper -> {
-            mapper.skip(SubjectDTO::setProfessor); // Skip professor to prevent recursion
-        });
-
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         return modelMapper;
     }
 }

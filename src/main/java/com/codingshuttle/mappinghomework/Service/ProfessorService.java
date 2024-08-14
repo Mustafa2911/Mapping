@@ -6,7 +6,9 @@ import com.codingshuttle.mappinghomework.Repositories.ProfessorRepositories;
 import com.codingshuttle.mappinghomework.Repositories.SubjectRepositories;
 import com.codingshuttle.mappinghomework.entities.Professor;
 import com.codingshuttle.mappinghomework.entities.Subject;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,7 @@ public class ProfessorService {
    private ModelMapper modelMapper;
 
     public ProfessorDTO createProfessor(ProfessorDTO professor){
+        Professor profTitle=professorRepositories.findByTitle(professor.getTitle());
         Professor prof= professorRepositories.save(modelMapper.map(professor,Professor.class));
         return modelMapper.map(prof,ProfessorDTO.class);
     }
@@ -45,15 +48,29 @@ public class ProfessorService {
         return modelMapper.map(professorEntity,ProfessorDTO.class);
     }
 
+    @Transactional
     public ProfessorDTO getProfessorById(Long id) {
-        Professor professor= professorRepositories.findById(id).orElse(null);
-        ProfessorDTO professorDTO= modelMapper.map(professor,ProfessorDTO.class);
-        List<Subject>subjects=professor.getSubjects();
-        List<SubjectDTO> subjectDTOS= subjects.stream()
-                .map(subject -> modelMapper.map(subject, SubjectDTO.class))
-                .collect(Collectors.toList());
-        professorDTO.setSubjects(subjectDTOS);
-        return professorDTO;
+        Professor professor = professorRepositories.findById(id).orElse(null);
+        if (professor == null) {
+            return null;
+        }
+        ModelMapper tempMapper=new ModelMapper();
+        // Dynamically configure the TypeMap for this specific mapping
+        TypeMap<Professor, ProfessorDTO> typeMap = tempMapper.getTypeMap(Professor.class, ProfessorDTO.class);
+        if(typeMap==null){
+            typeMap=tempMapper.createTypeMap(Professor.class, ProfessorDTO.class);
+        }
+        typeMap.addMappings(mapper -> mapper.skip(ProfessorDTO::setSubjects));
+        // Perform the mapping with the specific configuration
+
+        return typeMap.map(professor);
+
+    }
+
+    public ProfessorDTO getProfessorWithSubjectId(Long id) {
+        Professor professor = professorRepositories.findById(id).orElse(null);
+
+        return modelMapper.map(professor, ProfessorDTO.class);
 
     }
 }

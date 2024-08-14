@@ -17,6 +17,5 @@ public class ProfessorDTO {
 
     private Long id;
     private String title;
-    @JsonIgnore
     private List<SubjectDTO> subjects;
 }
